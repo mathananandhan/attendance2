@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "https://server-mathananandhan58-4944s-projects.vercel.app/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

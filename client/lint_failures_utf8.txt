@@ -1,0 +1,118 @@
+﻿
+> client@0.0.0 lint
+> eslint .
+
+
+D:\projects\project1\attendance2\client\src\components\NotificationBell.jsx
+  63:22  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  61 |
+  62 |     const timeAgo = (dateStr) => {
+> 63 |         const diff = Date.now() - new Date(dateStr).getTime();
+     |                      ^^^^^^^^^^ Cannot call impure function
+  64 |         const mins = Math.floor(diff / 60000);
+  65 |         if (mins < 1) return 'Just now';
+  66 |         if (mins < 60) return `${mins}m ago`;  react-hooks/purity
+
+D:\projects\project1\attendance2\client\src\context\ThemeContext.jsx
+  29:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\projects\project1\attendance2\client\src\pages\AdminDashboard.jsx
+   9:12  error    'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  45:20  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  43 |
+  44 |     useEffect(() => {
+> 45 |         if (token) fetchData();
+     |                    ^^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |     }, [token]);
+  47 |
+  48 |     const handleCreateTeacher = async (e) => {  react-hooks/set-state-in-effect
+  46:8   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  75:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+
+D:\projects\project1\attendance2\client\src\pages\Analytics.jsx
+  11:12  error  'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\projects\project1\attendance2\client\src\pages\Classroom.jsx
+    8:11  error    'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u               no-unused-vars
+  111:21  error    'interimTranscript' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u      no-unused-vars
+  248:15  error    'captureFrame' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u           no-unused-vars
+  346:8   warning  React Hook useEffect has a missing dependency: 'id'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\projects\project1\attendance2\client\src\pages\Dashboard.jsx
+  17:8  error  Parsing error: Identifier 'ReportCard' has already been declared
+
+D:\projects\project1\attendance2\client\src\pages\DiscussionForum.jsx
+  32:8   warning  React Hook useEffect has a missing dependency: 'fetchDiscussions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  69:22  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  67 |
+  68 |     const timeAgo = (dateStr) => {
+> 69 |         const diff = Date.now() - new Date(dateStr).getTime();
+     |                      ^^^^^^^^^^ Cannot call impure function
+  70 |         const mins = Math.floor(diff / 60000);
+  71 |         if (mins < 60) return `${mins}m ago`;
+  72 |         const hours = Math.floor(mins / 60);  react-hooks/purity
+
+D:\projects\project1\attendance2\client\src\pages\ExamPortal.jsx
+  232:8  warning  React Hook useEffect has a missing dependency: 'submitExam'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\projects\project1\attendance2\client\src\pages\JoinClass.jsx
+  17:8  warning  React Hook useEffect has a missing dependency: 'handleJoin'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\projects\project1\attendance2\client\src\pages\Leaderboard.jsx
+  29:8  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\projects\project1\attendance2\client\src\pages\ParentPortal.jsx
+  11:12  error  'lookupEmail' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+  11:25  error  'setLookupEmail' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  32:24  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  30 |
+  31 |     useEffect(() => {
+> 32 |         if (studentId) fetchReport(studentId);
+     |                        ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  33 |         else {
+  34 |             // If accessed as parent, use own child's ID from userInfo
+  35 |             const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');  react-hooks/set-state-in-effect
+
+D:\projects\project1\attendance2\client\src\pages\ReportCard.jsx
+  25:8  warning  React Hook useEffect has missing dependencies: 'headers' and 'userInfo._id'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\projects\project1\attendance2\client\src\pages\ResourceLibrary.jsx
+  29:22  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  27 |
+  28 |     useEffect(() => {
+> 29 |         if (classId) fetchResources();
+     |                      ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |     }, [classId]);
+  31 |
+  32 |     const handleAddResource = async (e) => {  react-hooks/set-state-in-effect
+  30:8   warning  React Hook useEffect has a missing dependency: 'fetchResources'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+
+Γ£û 23 problems (15 errors, 8 warnings)
+

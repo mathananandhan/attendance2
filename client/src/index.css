@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+}
+
+/* Dark mode overrides */
+.dark .bg-white {
+  background-color: #1f2937;
+}
+
+.dark .bg-gray-50 {
+  background-color: #111827;
+}
+
+.dark .text-gray-800 {
+  color: #f3f4f6;
+}
+
+.dark .text-gray-900 {
+  color: #f9fafb;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-600 {
+  color: #9ca3af;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151;
+}
+
+.dark .border-gray-100 {
+  border-color: #374151;
+}
