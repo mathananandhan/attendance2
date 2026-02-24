@@ -16,7 +16,7 @@ const ResourceLibrary = () => {
 
     const fetchResources = React.useCallback(async () => {
         try {
-            const { data } = await axios.get(`https://server-mathananandhan58-4944s-projects.vercel.app/api/resources/class/${classId}`, { headers });
+            const { data } = await axios.get(`https://edutech-x60p.onrender.com/api/resources/class/${classId}`, { headers });
             setResources(data);
             setLoading(false);
         } catch (error) {
@@ -33,7 +33,7 @@ const ResourceLibrary = () => {
     const handleAddResource = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/resources', { classId, ...newResource }, { headers });
+            await axios.post('https://edutech-x60p.onrender.com/api/resources', { classId, ...newResource }, { headers });
             setNewResource({ title: '', description: '', fileUrl: '', fileType: 'link' });
             setShowAddForm(false);
             fetchResources();
@@ -45,7 +45,7 @@ const ResourceLibrary = () => {
     const handleDelete = async (id) => {
         if (!confirm('Delete this resource?')) return;
         try {
-            await axios.delete(`https://server-mathananandhan58-4944s-projects.vercel.app/api/resources/${id}`, { headers });
+            await axios.delete(`https://edutech-x60p.onrender.com/api/resources/${id}`, { headers });
             fetchResources();
         } catch (error) {
             console.error('Error deleting resource:', error);

@@ -172,7 +172,7 @@ const Classroom = () => {
                 }
 
                 if (sidebarTab === 'resources') {
-                    const { data } = await fetch(`https://server-mathananandhan58-4944s-projects.vercel.app/api/resources/class/${id}`, { headers }).then(res => res.json());
+                    const { data } = await fetch(`https://edutech-x60p.onrender.com/api/resources/class/${id}`, { headers }).then(res => res.json());
                     setResources(data || []);
                 }
             } catch (err) {

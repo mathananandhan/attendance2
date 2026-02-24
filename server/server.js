@@ -94,8 +94,10 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/edtech_pla
 mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
-        if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-            server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        // Render sets RENDER environment variable to 'true'
+        // If we are NOT on Vercel, we should always listen
+        if (!process.env.VERCEL) {
+            server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
         }
     })
     .catch(err => {

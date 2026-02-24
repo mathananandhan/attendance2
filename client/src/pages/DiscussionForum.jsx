@@ -18,7 +18,7 @@ const DiscussionForum = () => {
 
     const fetchDiscussions = React.useCallback(async () => {
         try {
-            const { data } = await axios.get(`https://server-mathananandhan58-4944s-projects.vercel.app/api/discussions/class/${classId}`, { headers });
+            const { data } = await axios.get(`https://edutech-x60p.onrender.com/api/discussions/class/${classId}`, { headers });
             setDiscussions(data);
             setLoading(false);
         } catch (error) {
@@ -34,7 +34,7 @@ const DiscussionForum = () => {
     const handleCreateDiscussion = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/discussions', { classId, title: newTitle, content: newContent }, { headers });
+            await axios.post('https://edutech-x60p.onrender.com/api/discussions', { classId, title: newTitle, content: newContent }, { headers });
             setNewTitle('');
             setNewContent('');
             setShowNewForm(false);
@@ -48,7 +48,7 @@ const DiscussionForum = () => {
         const content = replyContent[discussionId];
         if (!content?.trim()) return;
         try {
-            await axios.post(`https://server-mathananandhan58-4944s-projects.vercel.app/api/discussions/${discussionId}/reply`, { content }, { headers });
+            await axios.post(`https://edutech-x60p.onrender.com/api/discussions/${discussionId}/reply`, { content }, { headers });
             setReplyContent(prev => ({ ...prev, [discussionId]: '' }));
             fetchDiscussions();
         } catch (error) {
@@ -58,7 +58,7 @@ const DiscussionForum = () => {
 
     const handleUpvote = async (discussionId) => {
         try {
-            await axios.put(`https://server-mathananandhan58-4944s-projects.vercel.app/api/discussions/${discussionId}/upvote`, {}, { headers });
+            await axios.put(`https://edutech-x60p.onrender.com/api/discussions/${discussionId}/upvote`, {}, { headers });
             fetchDiscussions();
         } catch (error) {
             console.error('Error upvoting:', error);

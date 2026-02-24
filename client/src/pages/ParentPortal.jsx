@@ -14,7 +14,7 @@ const ParentPortal = () => {
         try {
             setLoading(true);
             const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-            const { data } = await axios.get(`https://server-mathananandhan58-4944s-projects.vercel.app/api/reports/student/${id}`, {
+            const { data } = await axios.get(`https://edutech-x60p.onrender.com/api/reports/student/${id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setReport(data);

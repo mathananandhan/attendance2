@@ -14,8 +14,8 @@ const Leaderboard = () => {
                 const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                 const headers = { Authorization: `Bearer ${userInfo.token}` };
                 const [lbRes, meRes] = await Promise.all([
-                    axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/gamification/leaderboard', { headers }),
-                    axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/gamification/me', { headers })
+                    axios.get('https://edutech-x60p.onrender.com/api/gamification/leaderboard', { headers }),
+                    axios.get('https://edutech-x60p.onrender.com/api/gamification/me', { headers })
                 ]);
                 setLeaderboard(lbRes.data);
                 setMyProfile(meRes.data);

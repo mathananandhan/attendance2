@@ -15,7 +15,7 @@ const Register = () => {
         e.preventDefault();
         try {
             // Role is automatically 'student' for public registration
-            const { data } = await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/auth/signup', {
+            const { data } = await axios.post('https://edutech-x60p.onrender.com/api/auth/signup', {
                 name, email, password, role: 'student', department, year
             });
             localStorage.setItem('userInfo', JSON.stringify(data));
@@ -27,7 +27,7 @@ const Register = () => {
 
     const handleDemoLogin = async (demoEmail, demoPassword) => {
         try {
-            const { data } = await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/auth/login', { email: demoEmail, password: demoPassword });
+            const { data } = await axios.post('https://edutech-x60p.onrender.com/api/auth/login', { email: demoEmail, password: demoPassword });
             localStorage.setItem('userInfo', JSON.stringify(data));
             navigate('/dashboard');
         } catch (err) {

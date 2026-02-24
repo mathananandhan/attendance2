@@ -11,7 +11,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/auth/login', { email, password });
+            const { data } = await axios.post('https://edutech-x60p.onrender.com/api/auth/login', { email, password });
             localStorage.setItem('userInfo', JSON.stringify(data));
             navigate('/dashboard');
         } catch (err) {
@@ -21,7 +21,7 @@ const Login = () => {
 
     const handleDemoLogin = async (demoEmail, demoPassword) => {
         try {
-            const { data } = await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/auth/login', { email: demoEmail, password: demoPassword });
+            const { data } = await axios.post('https://edutech-x60p.onrender.com/api/auth/login', { email: demoEmail, password: demoPassword });
             localStorage.setItem('userInfo', JSON.stringify(data));
             navigate('/dashboard');
         } catch (err) {

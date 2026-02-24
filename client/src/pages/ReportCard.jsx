@@ -12,7 +12,7 @@ const ReportCard = () => {
             try {
                 const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                 const headers = { Authorization: `Bearer ${userInfo.token}` };
-                const { data } = await axios.get(`https://server-mathananandhan58-4944s-projects.vercel.app/api/reports/student/${userInfo._id}`, { headers });
+                const { data } = await axios.get(`https://edutech-x60p.onrender.com/api/reports/student/${userInfo._id}`, { headers });
                 setReport(data);
                 setLoading(false);
             } catch (error) {

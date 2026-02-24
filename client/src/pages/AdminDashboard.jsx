@@ -28,8 +28,8 @@ const AdminDashboard = () => {
 
     const fetchData = React.useCallback(async () => {
         try {
-            const usersRes = await axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/admin/users', config);
-            const classesRes = await axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/admin/classes', config);
+            const usersRes = await axios.get('https://edutech-x60p.onrender.com/api/admin/users', config);
+            const classesRes = await axios.get('https://edutech-x60p.onrender.com/api/admin/classes', config);
 
             setTeachers(usersRes.data.filter(u => u.role === 'teacher'));
             setClasses(classesRes.data);
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
     const handleCreateTeacher = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://server-mathananandhan58-4944s-projects.vercel.app/api/admin/create-teacher', {
+            await axios.post('https://edutech-x60p.onrender.com/api/admin/create-teacher', {
                 name: newTeacherName,
                 email: newTeacherEmail,
                 password: newTeacherPassword,
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
 
     const handleAssignTeacher = async (classId, teacherId) => {
         try {
-            await axios.put('https://server-mathananandhan58-4944s-projects.vercel.app/api/admin/assign-teacher', {
+            await axios.put('https://edutech-x60p.onrender.com/api/admin/assign-teacher', {
                 classId,
                 teacherId
             }, config);

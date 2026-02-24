@@ -16,7 +16,7 @@ const Timetable = () => {
         const fetchClasses = async () => {
             try {
                 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-                const { data } = await axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/classes/my', {
+                const { data } = await axios.get('https://edutech-x60p.onrender.com/api/classes/my', {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 setClasses(data);

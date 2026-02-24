@@ -3,7 +3,7 @@
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "https://server-mathananandhan58-4944s-projects.vercel.app/api/$1"
+            "destination": "https://edutech-x60p.onrender.com/api/$1"
         },
         {
             "source": "/(.*)",
