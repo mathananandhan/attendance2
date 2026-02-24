@@ -19,16 +19,6 @@ const Login = () => {
         }
     };
 
-    const handleDemoLogin = async (demoEmail, demoPassword) => {
-        try {
-            const { data } = await axios.post('https://edutech-x60p.onrender.com/api/auth/login', { email: demoEmail, password: demoPassword });
-            localStorage.setItem('userInfo', JSON.stringify(data));
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Demo Login failed. Make sure DB is seeded.');
-        }
-    };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -66,24 +56,6 @@ const Login = () => {
                     >
                         Sign In
                     </button>
-
-                    {/* Demo Logins */}
-                    <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
-                        <button
-                            type="button"
-                            onClick={() => handleDemoLogin('student@demo.com', 'password123')}
-                            className="flex-1 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-semibold rounded-lg transition-colors text-sm"
-                        >
-                            🎓 Demo Student
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleDemoLogin('teacher@demo.com', 'password123')}
-                            className="flex-1 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg transition-colors text-sm"
-                        >
-                            👨‍🏫 Demo Teacher
-                        </button>
-                    </div>
                 </form>
 
                 <p className="mt-6 text-center text-gray-600">
