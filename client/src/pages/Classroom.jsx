@@ -401,9 +401,17 @@ const Classroom = () => {
             }
         };
 
-        const cleanup = startAIStream();
+        // Delay AI stream start to ensure ZegoCloud gets camera priority first
+        const timer = setTimeout(() => {
+            const cleanup = startAIStream();
+            canvasRef.current._cleanupAI = cleanup;
+        }, 5000);
+
         return () => {
-            cleanup.then(stop => stop && stop());
+            clearTimeout(timer);
+            if (canvasRef.current?._cleanupAI) {
+                canvasRef.current._cleanupAI.then(stop => stop && stop());
+            }
         };
     }, [id]);
 
