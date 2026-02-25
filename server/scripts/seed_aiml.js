@@ -95,12 +95,10 @@ async function seedData() {
             // Capitalize first letter, lowercase rest (e.g. Math2006)
             const finalPassword = rawPassword.charAt(0).toUpperCase() + rawPassword.slice(1).toLowerCase();
 
-            const hashedPassword = await bcrypt.hash(finalPassword, 10);
-
             const newUser = new User({
                 name: student.name,
                 email: student.email,
-                password: hashedPassword,
+                password: finalPassword, // User model pre-save hook will hash this
                 role: 'student',
                 rollNumber: student.roll,
                 department: 'AIML',
