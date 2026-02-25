@@ -259,6 +259,7 @@ const Classes = ({ user }) => {
                                         <option value="CIVIL">CIVIL</option>
                                         <option value="IT">IT</option>
                                         <option value="AI&DS">AI&DS</option>
+                                        <option value="AIML">AIML</option>
                                     </select>
                                 </div>
                                 <div>
