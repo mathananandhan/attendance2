@@ -81,6 +81,19 @@ io.on('connection', (socket) => {
         console.log(`User ${userId} (${role}) joined class ${classId}`);
     });
 
+    // Custom Chat Messaging
+    socket.on('send-chat-message', ({ classId, message, senderName, senderRole, senderId }) => {
+        const chatData = {
+            id: Date.now().toString(),
+            message,
+            senderName,
+            senderRole,
+            senderId,
+            timestamp: new Date()
+        };
+        io.to(classId).emit('receive-chat-message', chatData);
+    });
+
     socket.on('webrtc-offer', ({ targetSocketId, offer, callerId }) => {
         io.to(targetSocketId).emit('webrtc-offer', { offer, callerId, callerSocketId: socket.id });
     });

@@ -12,6 +12,11 @@ const Classroom = () => {
     const [gesture, setGesture] = useState("none");
     const canvasRef = useRef(null);
 
+    // Chat State
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatInput, setChatInput] = useState("");
+    const socketRef = useRef(null);
+
     // Quiz State
     const [quizTopic, setQuizTopic] = useState("");
     const [questions, setQuestions] = useState([]);
@@ -30,6 +35,7 @@ const Classroom = () => {
 
     useEffect(() => {
         const socket = io('https://edutech-x60p.onrender.com');
+        socketRef.current = socket;
         socket.emit('join-class', { classId: id, userId: userInfo._id, role: userInfo.role });
 
         socket.on('attendance-update', (data) => {
@@ -55,8 +61,28 @@ const Classroom = () => {
             }
         });
 
-        return () => socket.disconnect();
+        socket.on('receive-chat-message', (data) => {
+            setChatMessages(prev => [...prev, data]);
+        });
+
+        return () => {
+            socket.disconnect();
+            socketRef.current = null;
+        }
     }, [id, userInfo._id, userInfo.role]);
+
+    const handleSendMessage = (e) => {
+        if (e.key === 'Enter' && chatInput.trim() !== '') {
+            socketRef.current?.emit('send-chat-message', {
+                classId: id,
+                message: chatInput,
+                senderName: userInfo.name || 'User',
+                senderRole: userInfo.role,
+                senderId: userInfo._id
+            });
+            setChatInput("");
+        }
+    };
 
     const handleGenerateQuiz = async () => {
         if (!quizTopic) return;
@@ -613,11 +639,20 @@ const Classroom = () => {
                     {/* CHAT TAB */}
                     {sidebarTab === 'chat' && (
                         <div className="h-full flex flex-col">
-                            <div className="flex-1 p-4 space-y-4">
+                            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
                                 <div className="bg-gray-700/50 p-3 rounded-lg text-sm">
                                     <p className="font-bold text-indigo-400 text-xs mb-1">System</p>
                                     <p className="text-gray-300">Welcome to Class! Dept: {JSON.parse(localStorage.getItem('userInfo'))?.department}, Year: {JSON.parse(localStorage.getItem('userInfo'))?.year}</p>
                                 </div>
+                                {chatMessages.map((msg, i) => (
+                                    <div key={i} className={`p-3 rounded-lg text-sm ${msg.senderId === userInfo._id ? 'bg-indigo-600/50' : 'bg-gray-700/50'}`}>
+                                        <p className={`font-bold text-xs mb-1 ${msg.senderId === userInfo._id ? 'text-indigo-300' : 'text-emerald-400'}`}>
+                                            {msg.senderName}
+                                            {msg.senderRole === 'teacher' && <span className="ml-1 bg-yellow-500/20 text-yellow-500 px-1 py-0.5 rounded text-[10px]">Host</span>}
+                                        </p>
+                                        <p className="text-gray-200">{msg.message}</p>
+                                    </div>
+                                ))}
                                 {flags.map((flag, i) => (
                                     <div key={i} className="bg-red-900/50 p-2 rounded text-xs text-red-200 border border-red-800">
                                         ⚠️ Alert: {flag.replace('_', ' ')}
@@ -627,8 +662,11 @@ const Classroom = () => {
                             <div className="p-4 bg-gray-800 border-t border-gray-700">
                                 <input
                                     type="text"
-                                    placeholder="Type a message..."
+                                    placeholder="Type a message and press Enter..."
                                     className="w-full bg-gray-700 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-white"
+                                    value={chatInput}
+                                    onChange={(e) => setChatInput(e.target.value)}
+                                    onKeyDown={handleSendMessage}
                                 />
                             </div>
                         </div>
