@@ -321,8 +321,14 @@ const Classroom = () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.createElement('video');
+                video.muted = true;
+                video.playsInline = true;
                 video.srcObject = stream;
-                video.play();
+
+                // Wait for metadata to load to ensure width/height are available
+                video.onloadedmetadata = () => {
+                    video.play();
+                };
 
                 const interval = setInterval(async () => {
                     if (!canvasRef.current || video.videoWidth === 0) return;
