@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Mic, Video, PhoneOff, MessageSquare, Hand, FileText, Download, ExternalLink } from 'lucide-react';
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { io } from 'socket.io-client';
 
 const Classroom = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
 
     const [attentionScore, setAttentionScore] = useState(100);
     const [flags, setFlags] = useState([]);
@@ -55,8 +56,15 @@ const Classroom = () => {
             }
         });
 
+        socket.on('class-ended', () => {
+            if (userInfo.role !== 'teacher' && userInfo.role !== 'faculty') {
+                alert("The teacher has ended the class session.");
+                navigate('/dashboard');
+            }
+        });
+
         return () => socket.disconnect();
-    }, [id, userInfo._id, userInfo.role]);
+    }, [id, userInfo._id, userInfo.role, navigate]);
 
     const handleGenerateQuiz = async () => {
         if (!quizTopic) return;
@@ -463,6 +471,14 @@ const Classroom = () => {
                             }
                         });
                     }
+                },
+                onLeaveRoom: () => {
+                    if (isTeacher) {
+                        const socket = io('https://edutech-x60p.onrender.com');
+                        socket.emit('end-class', { classId: id });
+                        socket.disconnect();
+                    }
+                    navigate('/dashboard');
                 }
             });
         } catch (err) {

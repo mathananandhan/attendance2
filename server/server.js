@@ -99,6 +99,12 @@ io.on('connection', (socket) => {
         console.log(`Quiz started in class ${classId}`);
     });
 
+    // --- End Class Signaling ---
+    socket.on('end-class', ({ classId }) => {
+        socket.to(classId).emit('class-ended');
+        console.log(`Class ${classId} was ended by the teacher`);
+    });
+
     socket.on('disconnect', () => {
         // Remove user from map
         for (const [userId, socketId] of connectedUsers.entries()) {
