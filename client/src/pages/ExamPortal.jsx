@@ -53,20 +53,30 @@ const ExamPortal = () => {
                 if (data.success && data.data) {
                     // Start of Anti-Cheat 5: Question & Option Shuffling
                     let fetchedQuestions = data.data.questions || [];
-                    fetchedQuestions = shuffleArray(fetchedQuestions).map(q => {
-                        // Shuffle options while keeping track of the correct answer string
-                        const correctStr = q.options[q.correctOption];
-                        const shuffledOptions = shuffleArray([...q.options]);
-                        const newCorrectIndex = shuffledOptions.indexOf(correctStr);
-                        return {
-                            ...q,
-                            options: shuffledOptions,
-                            correctOption: newCorrectIndex
-                        };
-                    });
+                    try {
+                        fetchedQuestions = shuffleArray(fetchedQuestions).map(q => {
+                            // Safely handle missing options array from AI mistakes
+                            const optionsList = q.options && Array.isArray(q.options) ? q.options : ["Option 1", "Option 2", "Option 3", "Option 4"];
+                            const correctIdx = typeof q.correctOption === 'number' ? q.correctOption : 0;
 
-                    data.data.questions = fetchedQuestions;
-                    setExamData(data.data);
+                            // Shuffle options while keeping track of the correct answer string
+                            const correctStr = optionsList[correctIdx] || optionsList[0];
+                            const shuffledOptions = shuffleArray([...optionsList]);
+                            const newCorrectIndex = shuffledOptions.indexOf(correctStr);
+                            return {
+                                ...q,
+                                options: shuffledOptions,
+                                correctOption: newCorrectIndex !== -1 ? newCorrectIndex : 0
+                            };
+                        });
+                        data.data.questions = fetchedQuestions;
+                        setExamData(data.data);
+                    } catch (shuffleErr) {
+                        console.error("Exam formatting error:", shuffleErr);
+                        // Fallback straight to unshuffled to avoid locking the exam portal
+                        data.data.questions = data.data.questions || [];
+                        setExamData(data.data);
+                    }
 
                     // Use actual duration if provided for total timer
                     if (data.data.duration) {
