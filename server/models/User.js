@@ -5,9 +5,10 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['student', 'teacher', 'admin'], default: 'student' },
-    department: { type: String, enum: ['CSE', 'ECE', 'MECH', 'CIVIL', 'IT', 'AI&DS'] },
-    year: { type: String, enum: ['I', 'II', 'III', 'IV'] },
+    role: { type: String, enum: ['student', 'teacher', 'faculty', 'admin'], default: 'student' },
+    department: { type: String }, // e.g., 'CSE', 'AI&ML'
+    year: { type: String }, // e.g., 'I', 'II', 'III', 'IV'
+    section: { type: String }, // e.g., 'A', 'B'
     avatar: { type: String, default: '' },
     parentEmail: { type: String, default: '' },
     phone: { type: String, default: '' },

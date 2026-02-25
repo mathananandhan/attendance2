@@ -29,7 +29,7 @@ const ExamsManager = ({ user, darkMode }) => {
                 const headers = { 'Authorization': `Bearer ${userInfo.token}` };
 
                 // Fetch classes
-                const classRes = await fetch('/api/classes', { headers });
+                const classRes = await fetch('https://edutech-x60p.onrender.com/api/classes/my', { headers });
                 const classData = await classRes.json();
                 const fetchedClasses = classData.data || [];
                 setClasses(fetchedClasses);
@@ -40,7 +40,7 @@ const ExamsManager = ({ user, darkMode }) => {
 
                     // Fetch exams for the first class (or we could fetch all exams by looping, 
                     // but let's simple default to the first class for this view)
-                    const examRes = await fetch(`/api/exams/class/${firstClassId}`, { headers });
+                    const examRes = await fetch(`https://edutech-x60p.onrender.com/api/exams/class/${firstClassId}`, { headers });
                     const examData = await examRes.json();
                     setExams(examData.data || []);
                 }
@@ -60,7 +60,7 @@ const ExamsManager = ({ user, darkMode }) => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const headers = { 'Authorization': `Bearer ${userInfo.token}` };
-            const examRes = await fetch(`/api/exams/class/${sid}`, { headers });
+            const examRes = await fetch(`https://edutech-x60p.onrender.com/api/exams/class/${sid}`, { headers });
             const examData = await examRes.json();
             setExams(examData.data || []);
         } catch (err) {
@@ -113,7 +113,7 @@ const ExamsManager = ({ user, darkMode }) => {
                 proctoringConfig: { requireCamera: true, blockTabSwitch: true }
             };
 
-            await fetch('/api/exams', {
+            await fetch('https://edutech-x60p.onrender.com/api/exams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ const ExamsManager = ({ user, darkMode }) => {
             setQuestions([]);
 
             // Refresh list
-            const examRes = await fetch(`/api/exams/class/${selectedClassId}`, {
+            const examRes = await fetch(`https://edutech-x60p.onrender.com/api/exams/class/${selectedClassId}`, {
                 headers: { 'Authorization': `Bearer ${userInfo.token}` }
             });
             const examData = await examRes.json();

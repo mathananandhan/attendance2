@@ -33,11 +33,19 @@ const admin = (req, res, next) => {
 };
 
 const teacher = (req, res, next) => {
-    if (req.user && (req.user.role === 'teacher' || req.user.role === 'admin')) {
+    if (req.user && (req.user.role === 'teacher' || req.user.role === 'faculty' || req.user.role === 'admin')) {
         next();
     } else {
         res.status(401).json({ message: 'Not authorized as a teacher' });
     }
 };
 
-module.exports = { protect, admin, teacher };
+const faculty = (req, res, next) => {
+    if (req.user && (req.user.role === 'faculty' || req.user.role === 'teacher' || req.user.role === 'admin')) {
+        next();
+    } else {
+        res.status(401).json({ message: 'Not authorized as faculty' });
+    }
+};
+
+module.exports = { protect, admin, teacher, faculty };

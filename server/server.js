@@ -47,6 +47,7 @@ const gamificationRoutes = require('./routes/gamificationRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const examRoutes = require('./routes/examRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
@@ -60,6 +61,7 @@ app.use('/api/gamification', gamificationRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/exams', examRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 // Socket.io Connection
 const connectedUsers = new Map();
@@ -72,6 +74,31 @@ io.on('connection', (socket) => {
         console.log(`User ${userId} registered with socket ${socket.id}`);
     });
 
+    // Class & WebRTC Signaling
+    socket.on('join-class', ({ classId, userId, role }) => {
+        socket.join(classId);
+        socket.to(classId).emit('user-joined', { userId, role, socketId: socket.id });
+        console.log(`User ${userId} (${role}) joined class ${classId}`);
+    });
+
+    socket.on('webrtc-offer', ({ targetSocketId, offer, callerId }) => {
+        io.to(targetSocketId).emit('webrtc-offer', { offer, callerId, callerSocketId: socket.id });
+    });
+
+    socket.on('webrtc-answer', ({ targetSocketId, answer, responderId }) => {
+        io.to(targetSocketId).emit('webrtc-answer', { answer, responderId, responderSocketId: socket.id });
+    });
+
+    socket.on('webrtc-ice-candidate', ({ targetSocketId, candidate, senderId }) => {
+        io.to(targetSocketId).emit('webrtc-ice-candidate', { candidate, senderId, senderSocketId: socket.id });
+    });
+
+    // --- AI Quiz Signaling ---
+    socket.on('start-quiz', ({ classId, questions }) => {
+        socket.to(classId).emit('quiz-started', { questions });
+        console.log(`Quiz started in class ${classId}`);
+    });
+
     socket.on('disconnect', () => {
         // Remove user from map
         for (const [userId, socketId] of connectedUsers.entries()) {
@@ -81,6 +108,7 @@ io.on('connection', (socket) => {
             }
         }
         console.log('User disconnected:', socket.id);
+        io.emit('user-disconnected', socket.id);
     });
 });
 

@@ -16,7 +16,7 @@ const Analytics = () => {
             try {
                 if (!classId) return;
                 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-                const { data } = await axios.get(`/api/analytics/class/${classId}`, {
+                const { data } = await axios.get(`https://edutech-x60p.onrender.com/api/analytics/class/${classId}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 setTrendData(data.attentionTrend);

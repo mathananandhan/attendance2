@@ -8,7 +8,7 @@ exports.getMyClasses = async (req, res) => {
         let classes;
         if (req.user.role === 'admin') {
             classes = await Class.find().populate('teacher', 'name').populate('students', 'name');
-        } else if (req.user.role === 'teacher') {
+        } else if (req.user.role === 'teacher' || req.user.role === 'faculty') {
             classes = await Class.find({ teacher: req.user._id }).populate('teacher', 'name').populate('students', 'name');
         } else {
             // Student
@@ -41,7 +41,7 @@ exports.getClassById = async (req, res) => {
 // @access  Private (Teacher/Admin)
 exports.createClass = async (req, res) => {
     try {
-        const { title, department, year, description, schedule } = req.body;
+        const { title, department, year, section, description, schedule } = req.body;
 
         // Generate a random 6-character code
         const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -50,6 +50,7 @@ exports.createClass = async (req, res) => {
             title,
             department,
             year,
+            section,
             description,
             teacher: req.user._id,
             schedule,
@@ -73,6 +74,10 @@ exports.joinClass = async (req, res) => {
 
         if (!cls) {
             return res.status(404).json({ message: 'Invalid class code' });
+        }
+
+        if (req.user.department && cls.department && req.user.department !== cls.department) {
+            return res.status(403).json({ message: `You can only join classes in the ${req.user.department} department` });
         }
 
         if (cls.students.includes(req.user._id)) {

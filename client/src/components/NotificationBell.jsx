@@ -12,7 +12,7 @@ const NotificationBell = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
-            const { data } = await axios.get('https://server-mathananandhan58-4944s-projects.vercel.app/api/notifications', {
+            const { data } = await axios.get('https://edutech-x60p.onrender.com/api/notifications', {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setNotifications(data.notifications || []);
@@ -41,7 +41,7 @@ const NotificationBell = () => {
     const markAllRead = async () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.put('https://server-mathananandhan58-4944s-projects.vercel.app/api/notifications/read-all', {}, {
+            await axios.put('https://edutech-x60p.onrender.com/api/notifications/read-all', {}, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setUnreadCount(0);

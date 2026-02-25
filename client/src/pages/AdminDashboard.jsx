@@ -3,9 +3,10 @@ import axios from 'axios';
 import { Users, BookOpen, UserPlus, Save, Bell, FileText, Download, Send } from 'lucide-react';
 
 const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState('teachers');
+    const [activeTab, setActiveTab] = useState('overview');
     const [teachers, setTeachers] = useState([]);
     const [classes, setClasses] = useState([]);
+    const [adminStats, setAdminStats] = useState(null);
 
     // New Teacher Form
     const [newTeacherName, setNewTeacherName] = useState('');
@@ -30,9 +31,11 @@ const AdminDashboard = () => {
         try {
             const usersRes = await axios.get('https://edutech-x60p.onrender.com/api/admin/users', config);
             const classesRes = await axios.get('https://edutech-x60p.onrender.com/api/admin/classes', config);
+            const statsRes = await axios.get('https://edutech-x60p.onrender.com/api/analytics/admin', config);
 
             setTeachers(usersRes.data.filter(u => u.role === 'teacher'));
             setClasses(classesRes.data);
+            setAdminStats(statsRes.data);
         } catch (error) {
             console.error("Error fetching admin data", error);
         }
@@ -91,6 +94,13 @@ const AdminDashboard = () => {
                 <h2 className="text-2xl font-bold mb-8">Admin Panel</h2>
                 <nav className="space-y-4">
                     <button
+                        onClick={() => setActiveTab('overview')}
+                        className={`flex items-center gap-3 w-full p-3 rounded transition-colors ${activeTab === 'overview' ? 'bg-indigo-700' : 'hover:bg-indigo-800'}`}
+                    >
+                        <FileText size={20} />
+                        <span>Overview Analytics</span>
+                    </button>
+                    <button
                         onClick={() => setActiveTab('teachers')}
                         className={`flex items-center gap-3 w-full p-3 rounded transition-colors ${activeTab === 'teachers' ? 'bg-indigo-700' : 'hover:bg-indigo-800'}`}
                     >
@@ -127,6 +137,32 @@ const AdminDashboard = () => {
                     <div className="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 p-4 mb-6 rounded shadow-sm flex justify-between items-center">
                         <span>{message}</span>
                         <button onClick={() => setMessage('')} className="text-indigo-900 font-bold">&times;</button>
+                    </div>
+                )}
+
+                {activeTab === 'overview' && adminStats && (
+                    <div className="max-w-6xl">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <FileText className="text-indigo-600" /> System Overview
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Total Students</h3>
+                                <p className="text-3xl font-black text-indigo-600">{adminStats.totalStudents}</p>
+                            </div>
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Total Teachers</h3>
+                                <p className="text-3xl font-black text-emerald-500">{adminStats.totalTeachers}</p>
+                            </div>
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Active Classes</h3>
+                                <p className="text-3xl font-black text-blue-500">{adminStats.totalClasses}</p>
+                            </div>
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Avg System Attention</h3>
+                                <p className="text-3xl font-black text-amber-500">{adminStats.avgAttentionScore}%</p>
+                            </div>
+                        </div>
                     </div>
                 )}
 

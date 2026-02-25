@@ -15,6 +15,23 @@ const ExamPortal = () => {
     const [loading, setLoading] = useState(true);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [questionTimeLeft, setQuestionTimeLeft] = useState(60); // 60s per question strict limit
+    const [userAnswers, setUserAnswers] = useState({});
+
+    const logViolationToBackend = async (type, severity) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await fetch(`https://edutech-x60p.onrender.com/api/exams/${examId}/violation`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userInfo.token}`
+                },
+                body: JSON.stringify({ type, severity })
+            });
+        } catch (err) {
+            console.error("Failed to log violation to backend", err);
+        }
+    };
 
     // Shuffle helper function
     const shuffleArray = (array) => {
@@ -31,7 +48,7 @@ const ExamPortal = () => {
             try {
                 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
                 const headers = { 'Authorization': `Bearer ${userInfo.token}` };
-                const res = await fetch(`/api/exams/${examId}`, { headers });
+                const res = await fetch(`https://edutech-x60p.onrender.com/api/exams/${examId}`, { headers });
                 const data = await res.json();
                 if (data.success && data.data) {
                     // Start of Anti-Cheat 5: Question & Option Shuffling
@@ -70,6 +87,7 @@ const ExamPortal = () => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 setWarnings(prev => prev + 1);
+                logViolationToBackend('tab_switch', 'high');
                 alert("WARNING: Tab switching is monitored. This incident has been recorded.");
             }
         };
@@ -92,6 +110,7 @@ const ExamPortal = () => {
             if (!document.fullscreenElement) {
                 setIsFullscreen(false);
                 setWarnings(prev => prev + 1);
+                logViolationToBackend('fullscreen_exit', 'high');
             }
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -141,7 +160,10 @@ const ExamPortal = () => {
                         if (data.flags && data.flags.length > 0) {
                             setWarnings(prev => prev + 1);
                             if (data.flags.includes('phone_detected')) {
+                                logViolationToBackend('mobile_phone_detected', 'critical');
                                 alert("CRITICAL WARNING: Mobile phone detected in frame. Incident recorded.");
+                            } else if (data.flags.includes('no_face_detected')) {
+                                logViolationToBackend('no_face', 'medium');
                             }
                         }
 
@@ -231,11 +253,35 @@ const ExamPortal = () => {
         return () => clearInterval(timer);
     }, [isFullscreen, examData, submitExam]);
 
-    const submitExam = React.useCallback(() => {
-        alert("Exam Submitted!");
+    const submitExam = React.useCallback(async () => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const res = await fetch(`https://edutech-x60p.onrender.com/api/exams/${examId}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userInfo.token}`
+                },
+                body: JSON.stringify({
+                    answers: userAnswers,
+                    warningsCount: warnings
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Exam Submitted! Your score: ${data.data.score}/${data.data.totalQuestions}. Violations Logged: ${data.data.violationsCount}`);
+            } else {
+                alert(data.message || "Failed to submit exam.");
+            }
+        } catch (err) {
+            console.error("Error submitting exam:", err);
+            alert("Error submitting exam. Please check your connection.");
+        }
+
         if (document.fullscreenElement) document.exitFullscreen();
         navigate('/dashboard');
-    }, [navigate]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [examId, navigate, userAnswers, warnings]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -321,14 +367,25 @@ const ExamPortal = () => {
                             </h3>
 
                             <div className="space-y-4">
-                                {examData.questions[currentQuestionIndex].options.map((opt, idx) => (
-                                    <label key={idx} className="flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer group transition-all">
-                                        <div className="w-6 h-6 rounded-full border-2 border-gray-300 group-hover:border-indigo-500 flex items-center justify-center shrink-0">
-                                            <div className="w-3 h-3 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        </div>
-                                        <span className="text-gray-700 font-medium">{opt}</span>
-                                    </label>
-                                ))}
+                                {examData.questions[currentQuestionIndex].options.map((opt, idx) => {
+                                    const isSelected = userAnswers[currentQuestionIndex] === opt;
+                                    return (
+                                        <label key={idx} className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer group ${isSelected ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/30'}`}>
+                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-indigo-500' : 'border-gray-300 group-hover:border-indigo-500'}`}>
+                                                <div className={`w-3 h-3 rounded-full bg-indigo-500 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
+                                            </div>
+                                            <input
+                                                type="radio"
+                                                name={`question-${currentQuestionIndex}`}
+                                                value={opt}
+                                                checked={isSelected}
+                                                onChange={() => setUserAnswers(prev => ({ ...prev, [currentQuestionIndex]: opt }))}
+                                                className="hidden"
+                                            />
+                                            <span className="text-gray-700 font-medium">{opt}</span>
+                                        </label>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}

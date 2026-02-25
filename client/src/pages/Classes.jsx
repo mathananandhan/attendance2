@@ -12,6 +12,7 @@ const Classes = ({ user }) => {
         title: '',
         department: '',
         year: '',
+        section: '',
         description: '',
         scheduleDay: 'Monday',
         scheduleStart: '',
@@ -21,7 +22,7 @@ const Classes = ({ user }) => {
     const fetchClasses = async () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const response = await fetch('/api/classes/my', {
+            const response = await fetch('https://edutech-x60p.onrender.com/api/classes/my', {
                 headers: { 'Authorization': `Bearer ${userInfo.token}` }
             });
             const data = await response.json();
@@ -43,10 +44,11 @@ const Classes = ({ user }) => {
         e.preventDefault();
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.post('/api/classes', {
+            await axios.post('https://edutech-x60p.onrender.com/api/classes', {
                 title: formData.title,
                 department: formData.department,
                 year: formData.year,
+                section: formData.section,
                 description: formData.description,
                 schedule: [{
                     day: formData.scheduleDay,
@@ -62,6 +64,7 @@ const Classes = ({ user }) => {
                 title: '',
                 department: '',
                 year: '',
+                section: '',
                 description: '',
                 scheduleDay: 'Monday',
                 scheduleStart: '',
@@ -240,7 +243,7 @@ const Classes = ({ user }) => {
                                     placeholder="e.g. Advanced AI"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                                     <select
@@ -271,6 +274,21 @@ const Classes = ({ user }) => {
                                         <option value="II">II</option>
                                         <option value="III">III</option>
                                         <option value="IV">IV</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                                    <select
+                                        name="section"
+                                        value={formData.section}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    >
+                                        <option value="">Select Section</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
                                     </select>
                                 </div>
                             </div>

@@ -61,3 +61,42 @@ exports.getClassAnalytics = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get Admin Analytics (Overall System Stats)
+// @route   GET /api/analytics/admin
+// @access  Private (Admin)
+exports.getAdminAnalytics = async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const Department = require('../models/Department');
+
+        const totalStudents = await User.countDocuments({ role: 'student' });
+        const totalTeachers = await User.countDocuments({ role: { $in: ['teacher', 'faculty'] } });
+        const totalDepartments = await Department.countDocuments({});
+        const totalClasses = await Class.countDocuments({});
+
+        // Calculate platform-wide average attention
+        const overallAttention = await Attendance.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    avgScore: { $avg: "$attentionScore" }
+                }
+            }
+        ]);
+
+        const avgAttentionScore = overallAttention.length > 0 ? overallAttention[0].avgScore : 0;
+
+        res.json({
+            totalStudents,
+            totalTeachers,
+            totalDepartments,
+            totalClasses,
+            avgAttentionScore: Math.round(avgAttentionScore)
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};

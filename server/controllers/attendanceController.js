@@ -28,6 +28,7 @@ exports.recordAttendance = async (req, res) => {
             const newScore = (oldScore + attentionScore) / 2;
 
             attendance.attentionScore = newScore;
+            attendance.leaveTime = new Date(); // Track last seen time as leaveTime
             if (flags && flags.length > 0) {
                 attendance.proctoringFlags.push(...flags.map(f => ({ type: f, timestamp: new Date() })));
             }
@@ -41,6 +42,9 @@ exports.recordAttendance = async (req, res) => {
                 studentId,
                 status: status || 'present',
                 attentionScore: attentionScore || 100,
+                joinTime: new Date(),
+                leaveTime: new Date(),
+                cameraOn: true,
                 proctoringFlags: flags ? flags.map(f => ({ type: f, timestamp: new Date() })) : []
             });
         }
@@ -54,6 +58,18 @@ exports.recordAttendance = async (req, res) => {
             if (attentionScore >= 90) {
                 await awardPoints(studentId, 5, 'High attention score');
             }
+        }
+
+        // Broadcast live update to Teacher via WebSocket
+        const io = req.app.get('io');
+        if (io) {
+            io.to(classId.toString()).emit('attendance-update', {
+                studentId,
+                studentName: req.user.name || 'Student',
+                attentionScore: attendance.attentionScore,
+                proctoringFlags: attendance.proctoringFlags,
+                status: attendance.status
+            });
         }
 
         res.status(200).json(attendance);

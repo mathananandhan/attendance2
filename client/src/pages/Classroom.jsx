@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Mic, Video, PhoneOff, MessageSquare, Hand, FileText, Download, ExternalLink } from 'lucide-react';
-import { JitsiMeeting } from '@jitsi/react-sdk';
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+import { io } from 'socket.io-client';
 
 const Classroom = () => {
     const { id } = useParams();
@@ -19,6 +20,43 @@ const Classroom = () => {
     const [userAnswers, setUserAnswers] = useState({});
     const [quizResult, setQuizResult] = useState(false);
     const [quizScore, setQuizScore] = useState(0);
+    const [quizTimeRemaining, setQuizTimeRemaining] = useState(0);
+    const [isStudentQuizActive, setIsStudentQuizActive] = useState(false);
+
+    const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
+
+    // Live Attendance from Sockets
+    const [liveAttendance, setLiveAttendance] = useState({});
+
+    useEffect(() => {
+        const socket = io('https://edutech-x60p.onrender.com');
+        socket.emit('join-class', { classId: id, userId: userInfo._id, role: userInfo.role });
+
+        socket.on('attendance-update', (data) => {
+            setLiveAttendance(prev => ({
+                ...prev,
+                [data.studentId]: {
+                    name: data.studentName,
+                    score: data.attentionScore,
+                    flags: data.proctoringFlags || []
+                }
+            }));
+        });
+
+        socket.on('quiz-started', ({ questions, topic }) => {
+            if (userInfo.role !== 'teacher' && userInfo.role !== 'faculty') {
+                setQuestions(questions);
+                setQuizTopic(topic || "Live Concept Quiz");
+                setUserAnswers({});
+                setQuizResult(false);
+                setQuizScore(0);
+                setIsStudentQuizActive(true);
+                setQuizTimeRemaining(60); // 60 seconds quick quiz
+            }
+        });
+
+        return () => socket.disconnect();
+    }, [id, userInfo._id, userInfo.role]);
 
     const handleGenerateQuiz = async () => {
         if (!quizTopic) return;
@@ -47,7 +85,7 @@ const Classroom = () => {
         setUserAnswers(prev => ({ ...prev, [questionId]: option }));
     };
 
-    const handleSubmitQuiz = () => {
+    const handleSubmitQuiz = async () => {
         let score = 0;
         questions.forEach(q => {
             if (userAnswers[q.id] === q.correctAnswer) {
@@ -57,7 +95,43 @@ const Classroom = () => {
         setQuizScore(score);
         setQuizResult(true);
         setQuizStarted(false);
+        setIsStudentQuizActive(false);
+
+        // API Submission for Students
+        if (userInfo.role !== 'teacher' && userInfo.role !== 'faculty') {
+            try {
+                const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+                await fetch('https://edutech-x60p.onrender.com/api/quizzes/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        classId: id,
+                        quizTopic: quizTopic || "Live Concept Quiz",
+                        score: score,
+                        totalPoints: questions.length
+                    })
+                });
+            } catch (err) {
+                console.error("Failed to submit quiz score", err);
+            }
+        }
     };
+
+    useEffect(() => {
+        let timer;
+        if (isStudentQuizActive && quizTimeRemaining > 0) {
+            timer = setInterval(() => {
+                setQuizTimeRemaining(prev => prev - 1);
+            }, 1000);
+        } else if (isStudentQuizActive && quizTimeRemaining === 0) {
+            handleSubmitQuiz(); // Auto submit when time is up
+        }
+        return () => clearInterval(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isStudentQuizActive, quizTimeRemaining]);
 
     // Live Smart Notes State
     const [isListening, setIsListening] = useState(false);
@@ -167,7 +241,7 @@ const Classroom = () => {
                 const headers = { 'Authorization': `Bearer ${userInfo.token}` };
 
                 if (sidebarTab === 'homework') {
-                    const { data } = await fetch(`/api/assignments/${id}`, { headers }).then(res => res.json());
+                    const { data } = await fetch(`https://edutech-x60p.onrender.com/api/assignments/${id}`, { headers }).then(res => res.json());
                     setAssignments(data || []);
                 }
 
@@ -187,7 +261,7 @@ const Classroom = () => {
     const handleCreateHomework = async () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await fetch('/api/assignments', {
+            await fetch('https://edutech-x60p.onrender.com/api/assignments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -202,7 +276,7 @@ const Classroom = () => {
                 })
             });
             // Refresh
-            const { data } = await fetch(`/api/assignments/${id}`, {
+            const { data } = await fetch(`https://edutech-x60p.onrender.com/api/assignments/${id}`, {
                 headers: { 'Authorization': `Bearer ${userInfo.token}` }
             }).then(res => res.json());
             setAssignments(data || []);
@@ -277,7 +351,7 @@ const Classroom = () => {
                             // For demo purposes, we do it here. In prod, use a counter.
                             try {
                                 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-                                await fetch('/api/attendance/record', {
+                                await fetch('https://edutech-x60p.onrender.com/api/attendance/record', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -333,9 +407,76 @@ const Classroom = () => {
         };
     }, [id]);
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
     const displayName = userInfo.name || (userInfo.role === 'teacher' ? 'Teacher' : 'Student User');
     const email = userInfo.email || '';
+
+    // Initialize ZegoCloud Meeting
+    const myMeeting = async (element) => {
+        if (!element) return;
+
+        try {
+            const appID = 1468285099;
+            const serverSecret = "0a6c6c2bf3e0d929c7bb334234993d8b";
+            const roomID = `EduPrime-Class-${id}`;
+            const userID = userInfo._id || Math.random().toString(36).substring(7);
+
+            // Generate Kit Token
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                appID,
+                serverSecret,
+                roomID,
+                userID,
+                displayName
+            );
+
+            const isTeacher = userInfo.role === 'teacher' || userInfo.role === 'faculty';
+
+            // Create instance object
+            const zp = ZegoUIKitPrebuilt.create(kitToken);
+
+            // Start the call
+            zp.joinRoom({
+                container: element,
+                scenario: {
+                    mode: ZegoUIKitPrebuilt.VideoConference,
+                },
+                showScreenSharingButton: isTeacher,
+                showRoomDetailsButton: false,
+                turnOnCameraWhenJoining: isTeacher,
+                turnOnMicrophoneWhenJoining: isTeacher,
+                showUserList: isTeacher,
+            });
+        } catch (err) {
+            console.error("ZegoCloud Initialization Error:", err);
+        }
+    };
+
+    const handleDownloadNotes = () => {
+        const printWindow = window.open('', '_blank');
+        const notesHTML = notes.map(n => `<div style="margin-bottom: 10px;">${n.replace(/\n/g, '<br/>').replace(/- /g, '• ')}</div>`).join('');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Class AI Live Notes</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; line-height: 1.6; color: #333; }
+                        h1 { color: #4f46e5; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;}
+                        .meta { color: #666; font-size: 12px; margin-bottom: 30px; }
+                        .note-block { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4f46e5; }
+                    </style>
+                </head>
+                <body>
+                    <h1>EduPrime - AI Generated Live Notes</h1>
+                    <div class="meta">Captured Date: ${new Date().toLocaleString()}</div>
+                    <div class="note-block">${notesHTML}</div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
@@ -344,61 +485,7 @@ const Classroom = () => {
 
             {/* Video Area */}
             <div className="flex-1 relative bg-black">
-                <JitsiMeeting
-                    domain="meet.jit.si"
-                    roomName={`EduPrime-Class-${id}`}
-                    configOverwrite={{
-                        startWithAudioMuted: true,
-                        startWithVideoMuted: true,
-                        disableModeratorIndicator: false,
-                        startScreenSharing: false,
-                        enableEmailInStats: false,
-                        // If it's a student, don't let them start recording or mute everyone.
-                        // (Note: Since we use public Jitsi, the first person to join is typically moderator.
-                        // But these UI flags help customize the experience)
-                        toolbarButtons: userInfo.role === 'teacher' || userInfo.role === 'admin'
-                            ? [
-                                'microphone', 'camera', 'desktop', 'fullscreen',
-                                'hangup', 'profile', 'chat', 'recording',
-                                'settings', 'raisehand',
-                                'videoquality', 'filmstrip', 'invite', 'participants-pane',
-                                'tileview', 'videobackgroundblur', 'mute-everyone', 'security'
-                            ]
-                            : [
-                                'microphone', 'camera', 'desktop', 'fullscreen',
-                                'hangup', 'profile', 'chat',
-                                'settings', 'raisehand',
-                                'videoquality', 'filmstrip', 'participants-pane',
-                                'tileview', 'videobackgroundblur'
-                            ]
-                    }}
-                    interfaceConfigOverwrite={{
-                        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-                        SHOW_JITSI_WATERMARK: false,
-                        SHOW_WATERMARK_FOR_GUESTS: false,
-                    }}
-                    userInfo={{
-                        displayName: displayName,
-                        email: email
-                    }}
-                    onApiReady={(externalApi) => {
-                        externalApi.addListener('videoConferenceJoined', () => {
-                            console.log('Joined video conference!');
-                        });
-                    }}
-                    getIFrameRef={(iframeRef) => {
-                        iframeRef.style.height = '100%';
-                        iframeRef.style.width = '100%';
-                        iframeRef.allow = 'camera; microphone; display-capture; autoplay; clipboard-write; clipboard-read';
-                    }}
-                    spinner={() => (
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-white pointer-events-none opacity-50">
-                            <h2 className="text-2xl font-bold">Classroom {id}</h2>
-                            <p>Connecting to secure video server...</p>
-                        </div>
-                    )}
-                />
-
+                <div ref={myMeeting} className="w-full h-full" />
                 {/* Gesture Overlay */}
                 {gesture !== 'none' && (
                     <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-indigo-600/90 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 animate-bounce">
@@ -424,33 +511,41 @@ const Classroom = () => {
 
                 {/* Sidebar Navigation */}
                 <div className="flex border-t border-gray-700">
+                    {(userInfo.role === 'teacher' || userInfo.role === 'faculty') && (
+                        <button
+                            onClick={() => setSidebarTab('students')}
+                            className={`flex-[1] py-2 text-[10px] font-bold ${sidebarTab === 'students' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        >
+                            Monitor
+                        </button>
+                    )}
                     <button
                         onClick={() => setSidebarTab('chat')}
-                        className={`flex-1 py-2 text-xs font-bold ${sidebarTab === 'chat' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex-1 py-2 text-[10px] font-bold ${sidebarTab === 'chat' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
                         Chat
                     </button>
                     <button
                         onClick={() => setSidebarTab('notes')}
-                        className={`flex-1 py-2 text-xs font-bold ${sidebarTab === 'notes' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex-1 py-2 text-[10px] font-bold ${sidebarTab === 'notes' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
                         Notes
                     </button>
                     <button
                         onClick={() => setSidebarTab('resources')}
-                        className={`flex-1 py-2 text-xs font-bold ${sidebarTab === 'resources' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex-1 py-2 text-[10px] font-bold ${sidebarTab === 'resources' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
                         Docs
                     </button>
                     <button
                         onClick={() => setSidebarTab('homework')}
-                        className={`flex-1 py-2 text-xs font-bold ${sidebarTab === 'homework' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex-1 py-2 text-[10px] font-bold ${sidebarTab === 'homework' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
                         HW
                     </button>
                     <button
                         onClick={() => setSidebarTab('quiz')}
-                        className={`flex-1 py-2 text-xs font-bold ${sidebarTab === 'quiz' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex-1 py-2 text-[10px] font-bold ${sidebarTab === 'quiz' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
                         Quiz
                     </button>
@@ -458,6 +553,30 @@ const Classroom = () => {
 
                 {/* Content Area based on Tab */}
                 <div className="flex-1 overflow-y-auto bg-gray-800 relative">
+
+                    {/* AI MONITOR TAB */}
+                    {sidebarTab === 'students' && (
+                        <div className="p-4 flex flex-col h-full bg-gray-800">
+                            <h3 className="font-bold mb-4 text-indigo-400">Live AI Monitor Dashboard</h3>
+                            {Object.keys(liveAttendance).length === 0 ? (
+                                <p className="text-xs text-gray-400 text-center">Waiting for students to connect cameras...</p>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto space-y-2">
+                                    {Object.values(liveAttendance).map((student, i) => (
+                                        <div key={i} className="bg-gray-700 p-3 rounded flex justify-between items-center text-sm">
+                                            <div>
+                                                <p className="font-bold text-white">{student.name}</p>
+                                                <p className="text-xs text-red-300">{(student.flags || []).length} Warnings</p>
+                                            </div>
+                                            <div className={`font-bold ${student.score > 80 ? 'text-emerald-400' : student.score > 50 ? 'text-yellow-400' : 'text-red-500'}`}>
+                                                {Math.round(student.score)}%
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* CHAT TAB */}
                     {sidebarTab === 'chat' && (
@@ -483,12 +602,21 @@ const Classroom = () => {
                         </div>
                     )}
 
+
                     {/* NOTES TAB */}
                     {sidebarTab === 'notes' && (
                         <div className="p-4 space-y-3">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="font-bold text-indigo-400">Live Smart Notes</h3>
                                 <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleDownloadNotes}
+                                        disabled={notes.length === 0}
+                                        className="text-white hover:text-indigo-300 disabled:opacity-50"
+                                        title="Download as PDF"
+                                    >
+                                        <Download size={14} />
+                                    </button>
                                     <select
                                         value={language}
                                         onChange={(e) => setLanguage(e.target.value)}
@@ -672,10 +800,23 @@ const Classroom = () => {
                                     ))}
                                     <button
                                         onClick={handleSubmitQuiz}
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded transition-colors"
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded transition-colors mb-2"
                                     >
                                         Submit Answers
                                     </button>
+                                    {(userInfo.role === 'teacher' || userInfo.role === 'faculty') && (
+                                        <button
+                                            onClick={() => {
+                                                const socket = io('https://edutech-x60p.onrender.com');
+                                                socket.emit('start-quiz', { classId: id, questions, topic: quizTopic });
+                                                socket.disconnect();
+                                                alert("Quiz broadcasted to all students!");
+                                            }}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded transition-colors"
+                                        >
+                                            Broadcast Quiz to Students
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
@@ -719,6 +860,50 @@ const Classroom = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Student Live Quiz Popup */}
+            {isStudentQuizActive && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-indigo-500 shadow-2xl shadow-indigo-500/20">
+                        <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
+                            <h2 className="text-xl font-bold text-indigo-400">Live Quiz: {quizTopic}</h2>
+                            <div className="text-red-400 font-mono text-xl font-bold p-2 bg-red-400/10 rounded">
+                                {Math.floor(quizTimeRemaining / 60)}:{(quizTimeRemaining % 60).toString().padStart(2, '0')}
+                            </div>
+                        </div>
+                        <div className="space-y-6">
+                            {questions.map((q, index) => (
+                                <div key={q.id} className="text-sm">
+                                    <p className="font-semibold mb-2 text-lg">{index + 1}. {q.question}</p>
+                                    <div className="flex flex-col gap-2">
+                                        {q.options.map((opt, i) => (
+                                            <label key={i} className={`flex items-center gap-3 cursor-pointer p-3 rounded border transition-colors ${userAnswers[q.id] === opt ? 'bg-indigo-600/30 border-indigo-500' : 'bg-gray-700 border-transparent hover:bg-gray-600'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name={`spop-q-${q.id}`}
+                                                    value={opt}
+                                                    checked={userAnswers[q.id] === opt}
+                                                    onChange={() => handleAnswerChange(q.id, opt)}
+                                                    className="w-4 h-4 text-indigo-500 focus:ring-indigo-500 bg-gray-600 border-gray-500"
+                                                />
+                                                <span className="text-gray-200">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-8">
+                            <button
+                                onClick={handleSubmitQuiz}
+                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-emerald-600/30 transition-all text-lg"
+                            >
+                                Submit Answers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

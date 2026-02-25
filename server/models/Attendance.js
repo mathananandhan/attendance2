@@ -4,6 +4,9 @@ const attendanceSchema = new mongoose.Schema({
     classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     date: { type: Date, default: Date.now },
+    joinTime: { type: Date, default: Date.now },
+    leaveTime: { type: Date },
+    cameraOn: { type: Boolean, default: false },
     status: { type: String, enum: ['present', 'absent', 'late'], default: 'present' },
     attentionScore: { type: Number, default: 0 }, // Average attention score (0-100)
     proctoringFlags: [{

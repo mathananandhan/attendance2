@@ -4,6 +4,7 @@ const classSchema = new mongoose.Schema({
     title: { type: String, required: true },
     department: { type: String },
     year: { type: String },
+    section: { type: String },
     description: { type: String },
     teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

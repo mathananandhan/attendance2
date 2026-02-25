@@ -66,3 +66,31 @@ exports.submitAssignment = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Grade Assignment (Teacher/Faculty)
+// @route   PUT /api/assignments/:id/grade/:studentId
+// @access  Private (Teacher)
+exports.gradeAssignment = async (req, res) => {
+    const { grade, feedback } = req.body;
+    const { id, studentId } = req.params;
+
+    try {
+        const assignment = await Assignment.findById(id);
+        if (!assignment) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
+
+        const submission = assignment.submissions.find(s => s.studentId.toString() === studentId.toString());
+        if (!submission) {
+            return res.status(404).json({ message: 'Submission not found for this student' });
+        }
+
+        submission.grade = grade;
+        submission.feedback = feedback;
+
+        await assignment.save();
+        res.json({ message: 'Assignment graded successfully', submission });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
