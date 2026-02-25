@@ -186,7 +186,9 @@ const Analytics = () => {
                             <tr key={index} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
                                 <td className="px-6 py-4 text-red-500 font-bold">{student.score}%</td>
-                                <td className="px-6 py-4 text-gray-600">{student.attendance} Classes</td>
+                                <td className="px-6 py-4 text-gray-600 font-medium">
+                                    {student.attendanceRate !== undefined ? `${student.attendanceRate}%` : `${student.attendanceCount || 0} Classes`}
+                                </td>
                                 <td className="px-6 py-4">
                                     <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">Needs Help</span>
                                 </td>

@@ -25,6 +25,10 @@ exports.getClassAnalytics = async (req, res) => {
             { $sort: { date: 1 } } // Sort by date
         ]);
 
+        // Find total distinct sessions for this class
+        const distinctSessions = await Attendance.distinct("date", { classId: new mongoose.Types.ObjectId(classId) });
+        const totalSessions = distinctSessions.length || 1; // Prevent division by zero
+
         // 2. Student Performance List
         const studentPerformance = await Attendance.aggregate([
             { $match: { classId: new mongoose.Types.ObjectId(classId) } },
@@ -32,7 +36,10 @@ exports.getClassAnalytics = async (req, res) => {
                 $group: {
                     _id: "$studentId",
                     avgScore: { $avg: "$attentionScore" },
-                    attendanceCount: { $sum: 1 }
+                    // Count only if status is present or late
+                    attendanceCount: {
+                        $sum: { $cond: [{ $in: ["$status", ["present", "late"]] }, 1, 0] }
+                    }
                 }
             },
             {
@@ -48,7 +55,11 @@ exports.getClassAnalytics = async (req, res) => {
                 $project: {
                     name: "$student.name",
                     score: { $round: ["$avgScore", 0] },
-                    attendance: "$attendanceCount",
+                    // Calculate percentage: (Attended / Total Sessions) * 100
+                    attendanceRate: {
+                        $round: [{ $multiply: [{ $divide: ["$attendanceCount", totalSessions] }, 100] }, 0]
+                    },
+                    attendanceCount: "$attendanceCount",
                     _id: 0
                 }
             }
