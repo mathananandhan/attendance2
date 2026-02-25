@@ -325,7 +325,7 @@ const Classroom = () => {
                 video.play();
 
                 const interval = setInterval(async () => {
-                    if (!canvasRef.current) return;
+                    if (!canvasRef.current || video.videoWidth === 0) return;
 
                     const context = canvasRef.current.getContext('2d');
                     canvasRef.current.width = video.videoWidth;
@@ -904,6 +904,8 @@ const Classroom = () => {
                     </div>
                 </div>
             )}
+            {/* Hidden canvas for AI Video Frame Capture */}
+            <canvas ref={canvasRef} className="hidden" />
         </div>
     );
 };
