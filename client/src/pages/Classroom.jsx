@@ -431,20 +431,39 @@ const Classroom = () => {
 
             const isTeacher = userInfo.role === 'teacher' || userInfo.role === 'faculty';
 
-            // Create instance object
             const zp = ZegoUIKitPrebuilt.create(kitToken);
 
             // Start the call
             zp.joinRoom({
                 container: element,
                 scenario: {
-                    mode: ZegoUIKitPrebuilt.VideoConference,
+                    mode: isTeacher ? ZegoUIKitPrebuilt.VideoConference : ZegoUIKitPrebuilt.OneONoneCall, // OneONoneCall restricts their view layout implicitly, but role is better
+                    config: {
+                        role: isTeacher ? ZegoUIKitPrebuilt.Host : ZegoUIKitPrebuilt.Audience,
+                    },
                 },
                 showScreenSharingButton: isTeacher,
                 showRoomDetailsButton: false,
-                turnOnCameraWhenJoining: isTeacher,
+                turnOnCameraWhenJoining: true, // Everyone joins with camera on by default
                 turnOnMicrophoneWhenJoining: isTeacher,
-                showUserList: isTeacher,
+                showUserList: isTeacher, // Only teachers can see the list of peers
+                showPreJoinView: false,
+                lowerLeftNotification: {
+                    showUserJoinAndLeave: isTeacher,
+                    showTextChat: true
+                },
+                layout: isTeacher ? "Auto" : "Sidebar", // Limit student view layout
+                onUserCameraStateChanged: (users) => {
+                    // Logic: Notify teacher if someone turns off the camera
+                    if (isTeacher) {
+                        users.forEach(u => {
+                            if (!u.cameraOnOff) {
+                                // Add a system flag to the local chat array
+                                setFlags(prev => [...prev.slice(-4), `⚠️ ${u.userName} turned their camera off.`]);
+                            }
+                        });
+                    }
+                }
             });
         } catch (err) {
             console.error("ZegoCloud Initialization Error:", err);
