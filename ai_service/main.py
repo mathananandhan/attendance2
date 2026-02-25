@@ -5,9 +5,25 @@ import mediapipe as mp
 import numpy as np
 import base64
 import os
+import re
+import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 from ultralytics import YOLO
+
+def extract_json_from_response(text):
+    text = text.strip()
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except:
+            pass
+    cleaned = text.replace('```json', '').replace('```', '').strip()
+    try:
+        return json.loads(cleaned)
+    except:
+        return None
 
 load_dotenv()
 
@@ -40,7 +56,7 @@ except Exception as e:
 GOOGLE_API_KEY = os.getenv('GEMINI_API_KEY')
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
 else:
     print("Warning: GEMINI_API_KEY not found in environment variables.")
     model = None
@@ -80,10 +96,11 @@ def generate_quiz():
         
         response = model.generate_content(prompt)
         
-        # simple cleaning validation
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
 
     except Exception as e:
         print(f"Error generating quiz: {e}")
@@ -116,9 +133,11 @@ def generate_assignment():
         """
         
         response = model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
 
     except Exception as e:
         print(f"Error generating assignment: {e}")
@@ -165,9 +184,11 @@ def generate_exam():
         """
         
         response = model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
 
     except Exception as e:
         print(f"Error generating exam: {e}")
@@ -383,9 +404,11 @@ def predict_risk():
         """
         
         response = model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
     
     except Exception as e:
         print(f"Error predicting risk: {e}")
@@ -422,9 +445,11 @@ def generate_flashcards():
         """
         
         response = model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
     
     except Exception as e:
         print(f"Error generating flashcards: {e}")
@@ -465,9 +490,11 @@ def personalized_path():
         """
         
         response = model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        
-        return text, 200, {'Content-Type': 'application/json'}
+        parsed_json = extract_json_from_response(response.text)
+        if parsed_json is not None:
+            return jsonify(parsed_json)
+        else:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw": response.text}), 500
     
     except Exception as e:
         print(f"Error generating path: {e}")
