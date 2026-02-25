@@ -105,6 +105,11 @@ io.on('connection', (socket) => {
         console.log(`Class ${classId} was ended by the teacher`);
     });
 
+    // --- Student Camera Tracking ---
+    socket.on('camera-off', ({ classId, studentName }) => {
+        socket.to(classId).emit('student-camera-off', { studentName });
+    });
+
     socket.on('disconnect', () => {
         // Remove user from map
         for (const [userId, socketId] of connectedUsers.entries()) {

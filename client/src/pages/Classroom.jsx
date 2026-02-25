@@ -63,6 +63,12 @@ const Classroom = () => {
             }
         });
 
+        socket.on('student-camera-off', ({ studentName }) => {
+            if (userInfo.role === 'teacher' || userInfo.role === 'faculty') {
+                setFlags(prev => [...prev.slice(-4), `⚠️ ${studentName} turned their camera off.`]);
+            }
+        });
+
         return () => socket.disconnect();
     }, [id, userInfo._id, userInfo.role, navigate]);
 
@@ -445,10 +451,7 @@ const Classroom = () => {
             zp.joinRoom({
                 container: element,
                 scenario: {
-                    mode: isTeacher ? ZegoUIKitPrebuilt.VideoConference : ZegoUIKitPrebuilt.OneONoneCall, // OneONoneCall restricts their view layout implicitly, but role is better
-                    config: {
-                        role: isTeacher ? ZegoUIKitPrebuilt.Host : ZegoUIKitPrebuilt.Audience,
-                    },
+                    mode: ZegoUIKitPrebuilt.VideoConference,
                 },
                 showScreenSharingButton: isTeacher,
                 showRoomDetailsButton: false,
@@ -460,16 +463,13 @@ const Classroom = () => {
                     showUserJoinAndLeave: isTeacher,
                     showTextChat: true
                 },
-                layout: isTeacher ? "Auto" : "Sidebar", // Limit student view layout
-                onUserCameraStateChanged: (users) => {
-                    // Logic: Notify teacher if someone turns off the camera
-                    if (isTeacher) {
-                        users.forEach(u => {
-                            if (!u.cameraOnOff) {
-                                // Add a system flag to the local chat array
-                                setFlags(prev => [...prev.slice(-4), `⚠️ ${u.userName} turned their camera off.`]);
-                            }
-                        });
+                layout: isTeacher ? "Auto" : "Sidebar", // Sidebar makes teacher focus
+                onCameraStateUpdated: (state) => {
+                    // This fires when the LOCAL user's camera changes state
+                    if (!isTeacher && state === "OFF") {
+                        const socket = io('https://edutech-x60p.onrender.com');
+                        socket.emit('camera-off', { classId: id, studentName: userInfo.name });
+                        socket.disconnect();
                     }
                 },
                 onLeaveRoom: () => {
