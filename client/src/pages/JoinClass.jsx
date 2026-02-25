@@ -10,12 +10,6 @@ const JoinClass = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        if (code) {
-            handleJoin(code);
-        }
-    }, [code, handleJoin]);
-
     const handleJoin = React.useCallback(async (classCode) => {
         setLoading(true);
         setError(null);
@@ -32,7 +26,7 @@ const JoinClass = () => {
                 },
             };
 
-            await axios.post('/api/classes/join', { code: classCode }, config);
+            await axios.post('https://edutech-x60p.onrender.com/api/classes/join', { code: classCode }, config);
             setSuccess(true);
             setTimeout(() => {
                 navigate('/dashboard/classes');
@@ -43,6 +37,12 @@ const JoinClass = () => {
             setLoading(false);
         }
     }, [navigate]);
+
+    useEffect(() => {
+        if (code) {
+            handleJoin(code);
+        }
+    }, [code, handleJoin]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
