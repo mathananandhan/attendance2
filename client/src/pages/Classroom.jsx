@@ -441,26 +441,25 @@ const Classroom = () => {
 
             const zp = ZegoUIKitPrebuilt.create(kitToken);
 
-            // Start the call
             zp.joinRoom({
                 container: element,
                 scenario: {
-                    mode: isTeacher ? ZegoUIKitPrebuilt.VideoConference : ZegoUIKitPrebuilt.OneONoneCall, // OneONoneCall restricts their view layout implicitly, but role is better
+                    mode: isTeacher ? ZegoUIKitPrebuilt.VideoConference : ZegoUIKitPrebuilt.LiveStreaming,
                     config: {
                         role: isTeacher ? ZegoUIKitPrebuilt.Host : ZegoUIKitPrebuilt.Audience,
                     },
                 },
                 showScreenSharingButton: isTeacher,
                 showRoomDetailsButton: false,
-                turnOnCameraWhenJoining: true, // Everyone joins with camera on by default
+                turnOnCameraWhenJoining: true,
                 turnOnMicrophoneWhenJoining: isTeacher,
-                showUserList: isTeacher, // Only teachers can see the list of peers
+                showUserList: isTeacher,
                 showPreJoinView: false,
                 lowerLeftNotification: {
                     showUserJoinAndLeave: isTeacher,
                     showTextChat: true
                 },
-                layout: isTeacher ? "Auto" : "Sidebar", // Limit student view layout
+                layout: isTeacher ? "Auto" : "Sidebar",
                 onUserCameraStateChanged: (users) => {
                     // Logic: Notify teacher if someone turns off the camera
                     if (isTeacher) {
