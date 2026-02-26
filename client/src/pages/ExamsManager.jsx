@@ -31,7 +31,7 @@ const ExamsManager = ({ user, darkMode }) => {
                 // Fetch classes
                 const classRes = await fetch('https://edutech-x60p.onrender.com/api/classes/my', { headers });
                 const classData = await classRes.json();
-                const fetchedClasses = classData.data || [];
+                const fetchedClasses = Array.isArray(classData) ? classData : classData.data || [];
                 setClasses(fetchedClasses);
 
                 if (fetchedClasses.length > 0) {
@@ -166,7 +166,7 @@ const ExamsManager = ({ user, darkMode }) => {
                     className={`px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                 >
                     {classes.map(c => (
-                        <option key={c._id} value={c._id}>{c.name} - {c.subject}</option>
+                        <option key={c._id} value={c._id}>{c.title} - {c.department}</option>
                     ))}
                     {classes.length === 0 && <option value="">No Classes Found</option>}
                 </select>
