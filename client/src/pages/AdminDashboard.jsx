@@ -23,9 +23,9 @@ const AdminDashboard = () => {
 
     const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
 
-    const config = {
+    const config = React.useMemo(() => ({
         headers: { Authorization: `Bearer ${token}` }
-    };
+    }), [token]);
 
     const fetchData = React.useCallback(async () => {
         try {

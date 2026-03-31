@@ -342,6 +342,8 @@ const Classroom = () => {
 
     // Capture and analyze frame
     useEffect(() => {
+        const currentCanvas = canvasRef.current;
+
         // Start separate webcam stream for AI analysis
         const startAIStream = async () => {
             try {
@@ -357,14 +359,14 @@ const Classroom = () => {
                 };
 
                 const interval = setInterval(async () => {
-                    if (!canvasRef.current || video.videoWidth === 0) return;
+                    if (!currentCanvas || video.videoWidth === 0) return;
 
-                    const context = canvasRef.current.getContext('2d');
-                    canvasRef.current.width = video.videoWidth;
-                    canvasRef.current.height = video.videoHeight;
+                    const context = currentCanvas.getContext('2d');
+                    currentCanvas.width = video.videoWidth;
+                    currentCanvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-                    const imageData = canvasRef.current.toDataURL('image/jpeg');
+                    const imageData = currentCanvas.toDataURL('image/jpeg');
 
                     try {
                         // Send to AI Service
@@ -436,19 +438,18 @@ const Classroom = () => {
         // Delay AI stream start to ensure ZegoCloud gets camera priority first
         const timer = setTimeout(() => {
             const cleanup = startAIStream();
-            canvasRef.current._cleanupAI = cleanup;
+            if (currentCanvas) currentCanvas._cleanupAI = cleanup;
         }, 5000);
 
         return () => {
             clearTimeout(timer);
-            if (canvasRef.current?._cleanupAI) {
-                canvasRef.current._cleanupAI.then(stop => stop && stop());
+            if (currentCanvas?._cleanupAI) {
+                currentCanvas._cleanupAI.then(stop => stop && stop());
             }
         };
     }, [id]);
 
     const displayName = userInfo.name || (userInfo.role === 'teacher' ? 'Teacher' : 'Student User');
-    const email = userInfo.email || '';
 
     // Initialize ZegoCloud Meeting
     const myMeeting = async (element) => {

@@ -17,7 +17,7 @@ const ExamPortal = () => {
     const [questionTimeLeft, setQuestionTimeLeft] = useState(60); // 60s per question strict limit
     const [userAnswers, setUserAnswers] = useState({});
 
-    const logViolationToBackend = async (type, severity) => {
+    const logViolationToBackend = React.useCallback(async (type, severity) => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             await fetch(`https://edutech-x60p.onrender.com/api/exams/${examId}/violation`, {
@@ -31,7 +31,7 @@ const ExamPortal = () => {
         } catch (err) {
             console.error("Failed to log violation to backend", err);
         }
-    };
+    }, [examId]);
 
     // Shuffle helper function
     const shuffleArray = (array) => {
@@ -104,7 +104,7 @@ const ExamPortal = () => {
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, []);
+    }, [logViolationToBackend]);
 
     // 2. Anti-Cheat: Fullscreen Enforcement
     const enterFullscreen = () => {
@@ -125,7 +125,7 @@ const ExamPortal = () => {
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    }, []);
+    }, [logViolationToBackend]);
 
     // 3. AI Proctoring (Video & Audio)
     useEffect(() => {
@@ -226,7 +226,7 @@ const ExamPortal = () => {
         if (isFullscreen) {
             startProctoring();
         }
-    }, [isFullscreen]);
+    }, [isFullscreen, logViolationToBackend]);
 
     // Timer Logic (Global and Per-Question)
     useEffect(() => {
@@ -290,7 +290,6 @@ const ExamPortal = () => {
 
         if (document.fullscreenElement) document.exitFullscreen();
         navigate('/dashboard');
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [examId, navigate, userAnswers, warnings]);
 
     const formatTime = (seconds) => {
